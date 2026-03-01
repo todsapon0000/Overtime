@@ -1,0 +1,352 @@
+
+<html lang="en">
+<head>
+    <title>Overtime</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.0.8/css/dataTables.dataTables.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="https://cdn.datatables.net/2.0.8/js/dataTables.min.js"></script>
+    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js'></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-2.0.8/r-3.0.2/datatables.min.css"/>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-2.0.8/r-3.0.2/datatables.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+    <style>
+
+        body {
+            height: 2000px;
+        }
+
+        #data-table th:nth-child(4), #data-table td:nth-child(4) {
+            display: none !important;
+        }
+
+        #data-table thead th {
+            text-align: center !important;
+            vertical-align: middle !important;
+        }
+
+        #data-table {
+            height: auto !important;
+            width: 100%;
+            text-align: center;
+            margin-top: 10px;
+            border-collapse: collapse; 
+            max-height: none !important;
+            min-height: auto !important;
+            overflow-x: auto !important; /* ให้เลื่อนเฉพาะแนวนอนถ้าจอแคบมาก */
+            overflow-y: hidden !important; /* ปิดการเลื่อนแนวตั้งภายในตาราง */
+        }
+        
+        .dt-body-right {
+            text-align: right;
+        }
+
+        @media screen and (max-width: 480px) {
+            /* 1. บังคับให้ตารางมีความกว้างพอดีกับเนื้อหา (Fit-content) */
+            #data-table {
+                width: 100% !important;
+                font-size: 10px !important; /* ลดขนาดฟอนต์เพื่อให้ลงตัวในบรรทัดเดียว */
+                table-layout: auto !important;
+                display: table !important;
+            }
+
+
+            /* 2. ลด Padding ของ Cell ให้เหลือน้อยที่สุดเพื่อให้ Fit กับตัวหนังสือ */
+            #data-table th, #data-table td {
+                padding: 4px 2px !important; 
+                white-space: nowrap; /* ป้องกันตัวหนังสือตัดบรรทัดใหม่ */
+                text-align: center;
+            }
+
+            body {
+                height: auto;
+            }
+
+            #data-table th:nth-child(1), #data-table td:nth-child(1),
+            #data-table th:nth-child(4), #data-table td:nth-child(4),
+            #data-table th:last-child, #data-table td:last-child {
+                display: none !important;
+            }
+
+            /* 2. บังคับให้คอลัมน์ Action (สุดท้าย) แสดงผลเสมอ */
+            #data-table th:last-child, #data-table td:last-child {
+                display: table-cell !important;
+                text-align: center;
+                padding: 4px 2px !important;
+            }
+
+            .btn-group .btn-xs {
+                padding: 1px 3px !important; /* ลดช่องว่างในปุ่ม */
+                font-size: 9px !important;    /* ลดขนาด Icon/Text */
+                line-height: 1 !important;
+            }
+
+            #tablereport {
+                font-size: 12px !important; /* ย่อขนาดตัวหนังสือลง */
+                margin: 10px auto !important; /* ลดระยะห่างขอบ */
+            }
+
+            #header-subtitle {
+                font-size: 15px;
+            }
+
+
+        }
+
+    </style>
+<body>
+
+<div class="p-1 bg-primary text-white text-center" id="header">
+  <h1 id="header-title" style="margin-top: 10px;">OT Recording</h1>
+  <p id="header-subtitle" class="lead mt-3">โหลดข้อมูลรอบบัญชี...</p>
+</div>
+  
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-sm-12">
+
+
+            <table class="table table-bordered table-striped table-hover display" id="data-table">
+                <thead class="table-success">
+                    <tr>
+                        <th>brake</th>
+                        <th>holiday</th>
+                        <th>date</th>
+                        <th>checkin</th>
+                        <th>checkout</th>
+                        <th>ot</th>
+                        <th>ot15</th>
+                        <th>sumot15</th>
+                        <th>ot3</th>
+                        <th>sumot3</th>
+                        <th>totalOT</th>
+                        <th>total</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body"></tbody>
+
+            </table>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="myCustomModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel">Add manual</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <form id="form">
+                    <div class="row mb-2" style="display: none;">
+                        <div class="col-2">
+                            <label class="col-form-label">brake</label>
+                        </div>
+
+                        <div class="col-10">
+                            <input class="form-check-input" type="checkbox" id="addbrake" value="true" checked >
+                        </div>
+                    </div>
+
+                    <div class="row mb-2" style="display: none;">
+                        <div class="col-2">
+                            <label class="col-form-label">holiday</label>
+                        </div>
+
+                        <div class="col-10">
+                            <input type="text" class="form-control" id="addholiday">
+                        </div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-2">
+                            <label class="col-form-label">date</label>
+                        </div>
+
+                        <div class="col-10">
+                            <input type="text" class="form-control" id="adddate" value="" placeholder="คลิกเพื่อเลือกวันที่" onfocus="this.type='date'" onblur="if(!this.value) this.type='text';">
+                        </div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-2">
+                            <label class="col-form-label">CHECKIN</label>
+                        </div>
+
+                        <div class="col-10">
+                            <input type="text" class="form-control" id="addcheckin">
+                        </div>
+                    </div>
+
+                    <div class="row mb-2" style="display: none;">
+                        <div class="col-2">
+                            <label class="col-form-label">CHECKOUT</label>
+                        </div>
+
+                        <div class="col-10">
+                            <input type="text" class="form-control" id="addcheckout">
+                        </div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-2">
+                            <label class="col-form-label">CHECKOUT</label>
+                        </div>
+
+                        <div class="col-10">
+                            <input type="text" class="form-control" id="addot">
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center w-100 mt-3 ">
+                        <button type="button" class="btn btn-secondary mb-2" id="reset_add">Clear</button>
+                        
+                        <button type="button" class="btn btn-primary mb-2" id="submit">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="Modaledit" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel">Edit Data</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <form id="form">
+
+                    <div class="row mb-2" style="display: none;">
+                        <div class="col-2">
+                            <label class="col-form-label">id</label>
+                        </div>
+
+                        <div class="col-10">
+                            <input class="form-check-input" type="text" id="editid">
+                        </div>
+                    </div>
+
+                    <div class="row mb-2" style="display: none;">
+                        <div class="col-2">
+                            <label class="col-form-label">brake</label>
+                        </div>
+
+                        <div class="col-10">
+                            <input class="form-check-input" type="checkbox" id="editbrake" checked>
+                        </div>
+                    </div>
+
+                    <div class="row mb-2" style="display: none;">
+                        <div class="col-2">
+                            <label class="col-form-label">holiday</label>
+                        </div>
+
+                        <div class="col-10">
+                            <input type="text" class="form-control" id="editholiday">
+                        </div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-2">
+                            <label class="col-form-label">date</label>
+                        </div>
+
+                        <div class="col-10">
+                            <input type="text" class="form-control" id="editdate" placeholder = "" onfocus="this.type='date'" onblur="if(!this.value) this.type='text';">
+                        </div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-2">
+                            <label class="col-form-label">CHECKIN</label>
+                        </div>
+
+                        <div class="col-10">
+                            <input type="text" class="form-control" id="editcheckin">
+                        </div>
+                    </div>
+
+                    <div class="row mb-2" style="display: none;">
+                        <div class="col-2">
+                            <label class="col-form-label">CHECKOUT</label>
+                        </div>
+
+                        <div class="col-10">
+                            <input type="text" class="form-control" id="editcheckout">
+                        </div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-2">
+                            <label class="col-form-label">CHECKOUT</label>
+                        </div>
+
+                        <div class="col-10">
+                            <input type="text" class="form-control" id="editot">
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center w-100 mt-3 ">
+                        <button type="button" class="btn btn-secondary mb-2" id="reset_edit">Clear</button>
+                        
+                        <button type="button" class="btn btn-primary mb-2" id="submitedit">Submit</button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+
+<script type="module" src="showdata.js"></script>
+<script type="module" src="adddata.js"></script>
+<script type="module" src="editdata.js"></script>
+
+<script>
+    document.getElementById('reset_add').addEventListener('click', () => {
+        // 1. ล้างข้อมูลที่เป็น Text และวันที่
+        debugger;
+
+        document.getElementById('addholiday').value = '';
+        document.getElementById('addcheckin').value = '';
+        document.getElementById('addcheckout').value = '';
+        document.getElementById('addot').value = '';
+
+
+        // 2. บังคับให้ brake เป็น true (ติ๊กถูกไว้เสมอ)
+        const brakeCheckbox = document.getElementById('addbrake');
+        brakeCheckbox.checked = true; 
+
+        console.log("ล้างข้อมูลบางส่วนเรียบร้อยแล้ว (Brake ยังเป็น True)");
+    });
+
+    document.getElementById('reset_edit').addEventListener('click', () => {
+        // 1. ล้างข้อมูลที่เป็น Text และวันที่
+        debugger;
+
+        document.getElementById('editholiday').value = '';
+        document.getElementById('editcheckin').value = '';
+        document.getElementById('editcheckout').value = '';
+        document.getElementById('editot').value = '';
+
+
+        // 2. บังคับให้ brake เป็น true (ติ๊กถูกไว้เสมอ)
+        const brakeCheckbox = document.getElementById('addbrake');
+        brakeCheckbox.checked = true; 
+
+        console.log("ล้างข้อมูลบางส่วนเรียบร้อยแล้ว (Brake ยังเป็น True)");
+    });
+</script>
+</html>

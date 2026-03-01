@@ -632,9 +632,11 @@ function buildButton(rowData) {
             <button class="btn btn-xs btn-primary edit-btn" data-doc-id="${docId}" style="${btnStyle}">
                 <i class="fa fa-edit"></i>
             </button>
+            <!--
             <button class="btn btn-xs btn-danger del-btn" data-doc-id="${docId}" style="${btnStyle}">
                 <i class="fa fa-trash"></i>
             </button>
+            -->
         </div>
     `;
 }

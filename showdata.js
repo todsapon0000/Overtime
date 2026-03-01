@@ -630,7 +630,7 @@ function buildButton(rowData) {
     return `
         <div class="btn-group" style="display: flex; justify-content: center;">
             <button class="btn btn-xs btn-primary edit-btn" data-doc-id="${docId}" style="${btnStyle}">
-                <i class="fa fa-edit">a</i>
+                <i class="fa fa-edit"></i>
             </button>
 
         </div>

@@ -306,11 +306,11 @@ async function loadAndRenderData() {
                     { data: 'checkout', title: 'checkout' }, 
                     { data: 'ot', title: 'Out' },
                     { data: 'ot15', title: '1.5x', className: 'dt-body-right' },
-                    { data: 'sumot15', title: 'เป็นเงิน', className: 'dt-body-right' },
+                    { data: 'sumot15', title: '฿1.5', className: 'dt-body-right' },
                     { data: 'ot3', title: '3.0x', className: 'dt-body-right' },
-                    { data: 'sumot3', title: 'เป็นเงิน', className: 'dt-body-right' },
+                    { data: 'sumot3', title: '฿3.0', className: 'dt-body-right' },
                     { data: 'totalOT', title: 'Hr', className: 'dt-body-right' },
-                    { data: 'total', title: 'รวม', className: 'dt-body-right' },
+                    { data: 'total', title: 'Amt', className: 'dt-body-right' },
                     { 
                         data: null, 
                         title: 'Action', 
@@ -632,11 +632,9 @@ function buildButton(rowData) {
             <button class="btn btn-xs btn-primary edit-btn" data-doc-id="${docId}" style="${btnStyle}">
                 <i class="fa fa-edit"></i>
             </button>
-            <!-- 
             <button class="btn btn-xs btn-danger del-btn" data-doc-id="${docId}" style="${btnStyle}">
                 <i class="fa fa-trash"></i>
             </button>
-            -->
         </div>
     `;
 }

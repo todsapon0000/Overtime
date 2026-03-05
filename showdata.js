@@ -692,16 +692,22 @@ function openGenericAddModal() {
 }
 
 async function updateHeaderDisplay(selectedMonthText) {
+
     // ดึง Element จาก index
     const headerTitle = document.getElementById('header-title');
     const headerSubtitle = document.getElementById('header-subtitle');
-    const headerSubtitle2 = document.getElementById('header-subtitle2');
+    const currentYear = 2026
+
+    let lastDay = new Date(currentYear, (defaultDateEnd.getMonth()) + 1, 0); 
+    let dayOfWeek = lastDay.getDay();
+    if (dayOfWeek === 0) lastDay.setDate(lastDay.getDate() - 2); // อาทิตย์ -> ศุกร์
+    else if (dayOfWeek === 6) lastDay.setDate(lastDay.getDate() - 1); // เสาร์ -> ศุกร์
 
     if (headerTitle && headerSubtitle) {
         
-        // แสดงช่วงวันที่ (ดึงจากตัวแปร Global ที่คุณมี)
-        const start = formatDateString(defaultDateStart);
-        const end = formatDateString(defaultDateEnd);
-        headerSubtitle.innerText = `${start.slice(-6)} - ${end.slice(-6)} || เงินจะออกสิ้นเดือน ${end.slice(-3)}`;
+        const start = new Date(currentYear, (defaultDateStart.getMonth()), 21); 
+        const end = new Date(currentYear, (defaultDateEnd.getMonth()), 20); 
+
+        headerSubtitle.innerText = `${start.toLocaleString('th-TH', { day: 'numeric', month: 'short' })} - ${end.toLocaleString('th-TH', { day: 'numeric', month: 'short' })} || เงินจะออก ${lastDay.toLocaleString('th-TH', { day: 'numeric', month: 'long' })}`;
     }
 }

@@ -557,7 +557,7 @@ function renderReportTable(data) {
                 ${data.map(item => `
                     <tr>
                         <td>${item.month}</td>
-                        <td>${item.datestart.getDate()} ${item.datestart.toLocaleString('th-TH', {month:'short'})} - ${item.dateend.getDate()} ${item.dateend.toLocaleString('th-TH', {month:'short'})}</td>
+                        <td style="font-size: 8px">${item.datestart.getDate()} ${item.datestart.toLocaleString('th-TH', {month:'short'})} - ${item.dateend.getDate()} ${item.dateend.toLocaleString('th-TH', {month:'short'})}</td>
                         <td>${item.ot15.toFixed(2)}</td>
                         <td>${(hourlyRate * item.ot15.toLocaleString()) * 1.5}</td>
                         <td>${item.ot30.toFixed(2)}</td>

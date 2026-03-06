@@ -556,7 +556,7 @@ function renderReportTable(data) {
             <tbody>
                 ${data.map(item => `
                     <tr>
-                        <td>${item.month}</td>
+                        <td style="font-size: 8px">${item.month}</td>
                         <td style="font-size: 8px">${item.datestart.getDate()} ${item.datestart.toLocaleString('th-TH', {month:'short'})} - ${item.dateend.getDate()} ${item.dateend.toLocaleString('th-TH', {month:'short'})}</td>
                         <td>${item.ot15.toFixed(2)}</td>
                         <td>${(hourlyRate * item.ot15.toLocaleString()) * 1.5}</td>
@@ -564,7 +564,7 @@ function renderReportTable(data) {
                         <td>${(hourlyRate * item.ot30.toLocaleString()) * 3}</td>
                         <td>${(item.ot15 + item.ot30).toFixed(2)}</td>
                         <td class="fw-bold text-primary">${(((hourlyRate * 1.5) * item.ot15) + ((hourlyRate * 3) * item.ot30)).toLocaleString()}</td>
-                        <td class="text-danger fw-bold">${item.monthend}</td>
+                        <td class="text-danger fw-bold" style="font-size: 8px">${item.monthend}</td>
                     </tr>
                 `).join('')}
             </tbody>

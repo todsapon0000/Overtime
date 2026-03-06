@@ -203,7 +203,7 @@ function createMonthFilterDropdown(monthsArray) {
 
     filterContainer.innerHTML = `
         <select id="month-select" class="form-select" style="display: inline-block; width: auto;">
-            <option value="">เลือกเดือน</option>
+            <option value="Report">Report</option>
             ${monthOptionsHtml}
         </select>
     `;
@@ -352,7 +352,7 @@ async function loadAndRenderData() {
                     return wrapper; // ส่งค่ากลับ 1 element ที่รวมทุกอย่างไว้แล้ว
                 },
                 topStart: tablereport,
-                topEnd: '',
+                topEnd: tablereportall,
                 bottomStart: '',
                 bottomEnd: '',
             },
@@ -421,71 +421,206 @@ $(document).ready(function() {
         openEditModal(docIdToEdit); 
     });
 
-// ใน showdata.js (Listener)
+    // ใน showdata.js (Listener)
 
-$(document).on('change', '#month-select', function() {
+    $(document).on('change', '#month-select', function() {
 
-    debugger;
-    const selectedMonthAbbr = $(this).val();
+        debugger;
+        const selectedMonthAbbr = $(this).val();
+        
+        // ล้างตัวกรอง Custom Search ของ DataTable ออกทั้งหมด
+        $.fn.dataTable.ext.search = []; 
+
+        if (selectedMonthAbbr) {
+            const check = checkmonth(selectedMonthAbbr);
+            if (check && check.start && check.end) {
+                // อัปเดตช่วงวันที่สำหรับ Query ข้อมูล
+                defaultDateStart = check.start;
+                defaultDateEnd = check.end;
+
+                $('#report').hide();
+                $('#data-table, #btnadd, #tablereport, #header-subtitle').show();
+
+                // เรียกฟังก์ชันโหลดข้อมูลและวาดตารางใหม่
+                loadAndRenderData();
+            } else if (selectedMonthAbbr == 'Report'){
+                report(firebaseDataMap);
+            } else {
+                alert('ไม่พบช่วงรอบบัญชีสำหรับเดือนนี้');
+            }
+        }
+    });
+
+    // ดักจับการคลิกปุ่ม Delete ในตาราง
+    $(document).on('click', '.del-btn', async function(e) {
+        
+
+        debugger;
+        // ดึง docId จากแอตทริบิวต์ data-id
+        const docId = $(this).data('doc-id');
+        const data = firebaseDataMap.get(docId)
+
+        // ตรวจสอบเบื้องต้นว่า docId ไม่ว่าง เพื่อป้องกัน Error indexOf
+        if (!docId) {
+            console.error("Error: Document ID is undefined.");
+            return;
+        }
+
+        if (confirm("ยืนยันการลบข้อมูลแถวนี้?")) {
+            try {
+                // ใช้ฟังก์ชันจาก Firebase SDK ที่ Initialize ไว้แล้วในไฟล์หลัก
+                // สมมติว่าคุณใช้ Firebase แบบ Modular ผ่าน window หรือประกาศไว้ส่วนกลาง
+
+                const docRef = doc(db, "test", data.id);
+                
+                await deleteDoc(docRef);
+                firebaseDataMap.delete(docId); // ลบออกจาก Map ในเครื่อง
+                loadAndRenderData(); // สั่งวาดตารางใหม่ทันทีโดยไม่ต้อง Refresh หน้า
+                
+
+
+                console.log("ลบข้อมูล ID:", docId, "สำเร็จ");
+
+                //location.reload();
+
+            } catch (error) {
+                console.error("Error deleting document:", error);
+                alert("ไม่สามารถลบข้อมูลได้: " + error.message);
+            }
+        }
+    });
+
+});
+
+async function report(firebaseDataMap) {
+
+    const monthsENG = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+    const shortMonthsENG = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    let month_arr = [];
+    let currentYear = new Date().getFullYear();
+
+    $('#data-table, #tablereport, #btnadd').hide();
+
+    const headertitle = document.getElementById('header-subtitle');
+    headertitle.innerHTML = 'ข้อมูลการทำ OT และค่าตอบแทนประจำปี ' + currentYear;
     
-    // ล้างตัวกรอง Custom Search ของ DataTable ออกทั้งหมด
-    $.fn.dataTable.ext.search = []; 
+    // 1. ล้างค่าเก่าและเตรียมโครงสร้างเดือน
+    
 
-    if (selectedMonthAbbr) {
-        const check = checkmonth(selectedMonthAbbr);
-        if (check && check.start && check.end) {
-            // อัปเดตช่วงวันที่สำหรับ Query ข้อมูล
-            defaultDateStart = check.start;
-            defaultDateEnd = check.end;
+    // สร้างเดือนรอไว้ 12 เดือน พร้อมเซตค่าทุกอย่างเป็น 0
+    for (let i = 0; i < 12; i++) {
+        let dateStart = new Date(currentYear, i - 1, 21);
+        let dateEnd = new Date(currentYear, i, 20);
+        let lastDay = new Date(currentYear, i + 1, 0); 
+        // ... (Logic วันที่เงินออกเหมือนเดิม) ...
+        if (lastDay.getDay() === 0) lastDay.setDate(lastDay.getDate() - 2);
+        else if (lastDay.getDay() === 6) lastDay.setDate(lastDay.getDate() - 1);
 
-            // เรียกฟังก์ชันโหลดข้อมูลและวาดตารางใหม่
-            loadAndRenderData(); 
-        } else {
-            alert('ไม่พบช่วงรอบบัญชีสำหรับเดือนนี้');
+        month_arr.push({
+            month: monthsENG[i],
+            datestart: dateStart,
+            dateend: dateEnd,
+            monthend: lastDay.toLocaleString('th-TH', { day: 'numeric', month: 'short' }),
+            ot15: 0, sumot15: 0, ot30: 0, sumot30: 0, hr: 0, sum: 0 // เซตเป็น 0 ตรงนี้
+        });
+    }
+
+    // 2. วนลูปคำนวณแบบ "รอ" (Sequential Processing)
+    // ใช้ for...of เพื่อให้ await ทำงานถูกต้อง 
+    for (const [key, value] of firebaseDataMap) {
+
+        if (value.checkin || value.ot) {
+            const [dayName, dayStr, monthStr] = value.date.split(' ');
+            const dayNum = parseInt(dayStr);
+            
+            if (shortMonthsENG.includes(monthStr)) {
+                let targetIdx = shortMonthsENG.indexOf(monthStr);
+                if (dayNum >= 21) targetIdx = (targetIdx + 1) % 12;
+
+                // รอผลการคำนวณจากฟังก์ชันภายนอก
+                const calc = await calculateSinotransOT(value.date, value.checkin, value.ot, value.holiday !== '', value.brake);
+
+                // 🎯 บังคับแปลงเป็นทศนิยมก่อนบวก
+                const ot15Value = parseFloat(calc.ot15 || 0);
+                const sumot15Value = parseFloat(calc.sumot15 || 0);
+
+                // บวกสะสมเข้าไปในเดือนที่ถูกต้อง
+                month_arr[targetIdx].ot15 += ot15Value;
+                month_arr[targetIdx].sumot15 += sumot15Value;
+                month_arr[targetIdx].ot30 += parseFloat(calc.ot30 || 0);
+                month_arr[targetIdx].sumot30 += parseFloat(calc.sumot30 || 0);
+                month_arr[targetIdx].hr += parseFloat(calc.totalOT || 0);
+                month_arr[targetIdx].sum += parseFloat(calc.total || 0);
+
+                console.log(value.date + ':' + calc.ot15 + ':' + calc.ot30)
+            }
         }
     }
-});
 
-// ดักจับการคลิกปุ่ม Delete ในตาราง
-$(document).on('click', '.del-btn', async function(e) {
-    
+    // 3. วาดตาราง (ทำหลังจากคำนวณครบทุกวันแล้วเท่านั้น)
+    renderReportTable(month_arr); 
+}
 
-    debugger;
-    // ดึง docId จากแอตทริบิวต์ data-id
-    const docId = $(this).data('doc-id');
-    const data = firebaseDataMap.get(docId)
+function renderReportTable(data) {
+    debugger
 
-    // ตรวจสอบเบื้องต้นว่า docId ไม่ว่าง เพื่อป้องกัน Error indexOf
-    if (!docId) {
-        console.error("Error: Document ID is undefined.");
-        return;
-    }
+    const hourlyRate = (12000 / 30) / 8;
 
-    if (confirm("ยืนยันการลบข้อมูลแถวนี้?")) {
-        try {
-            // ใช้ฟังก์ชันจาก Firebase SDK ที่ Initialize ไว้แล้วในไฟล์หลัก
-            // สมมติว่าคุณใช้ Firebase แบบ Modular ผ่าน window หรือประกาศไว้ส่วนกลาง
+    const TotalOT15 = data.reduce((acc, item) => acc + (parseFloat(item.ot15) || 0), 0);
+    const TotalCash15 = (hourlyRate * TotalOT15) * 1.5 ;
 
-            const docRef = doc(db, "test", data.id);
-            
-            await deleteDoc(docRef);
-            firebaseDataMap.delete(docId); // ลบออกจาก Map ในเครื่อง
-            loadAndRenderData(); // สั่งวาดตารางใหม่ทันทีโดยไม่ต้อง Refresh หน้า
-            
+    const TotalOT30 = data.reduce((acc, item) => acc + (parseFloat(item.ot30) || 0), 0);
+    const TotalCash30 = (hourlyRate * TotalOT30) * 3 ;
 
+    const TotalHour = (parseFloat(TotalOT15) + parseFloat(TotalOT30) || 0)
+    const TotalCash = (parseFloat(TotalCash15) + parseFloat(TotalCash30) || 0)
 
-            console.log("ลบข้อมูล ID:", docId, "สำเร็จ");
+    tablereportall.innerHTML = `
+        <table class="table table-bordered table-striped table-hover" id="report">
+            <thead class="table-success">
+                <tr>
+                    <th>เดือน</th>
+                    <th>รอบ</th>
+                    <th>OT 1.5</th>
+                    <th>บาท</th>
+                    <th>OT 3.0</th>
+                    <th>บาท</th>
+                    <th>Hr</th>
+                    <th>รวม</th>
+                    <th>เงินออก</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${data.map(item => `
+                    <tr>
+                        <td>${item.month}</td>
+                        <td>${item.datestart.getDate()} ${item.datestart.toLocaleString('th-TH', {month:'short'})} - ${item.dateend.getDate()} ${item.dateend.toLocaleString('th-TH', {month:'short'})}</td>
+                        <td>${item.ot15.toFixed(2)}</td>
+                        <td>${(hourlyRate * item.ot15.toLocaleString()) * 1.5}</td>
+                        <td>${item.ot30.toFixed(2)}</td>
+                        <td>${(hourlyRate * item.ot30.toLocaleString()) * 3}</td>
+                        <td>${(item.ot15 + item.ot30).toFixed(2)}</td>
+                        <td class="fw-bold text-primary">${(((hourlyRate * 1.5) * item.ot15) + ((hourlyRate * 3) * item.ot30)).toLocaleString()}</td>
+                        <td class="text-danger fw-bold">${item.monthend}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+            <tfoot>
+                    <tr class="table-success">
+                        <td colspan = "2">รวม</td>
+                        <td class="fw-bold text-primary">${TotalOT15.toFixed(2)}</td>
+                        <td class="fw-bold text-primary">${TotalCash15.toFixed(2)}</td>
+                        <td class="fw-bold text-primary">${TotalOT30.toFixed(2)}</td>
+                        <td class="fw-bold text-primary">${TotalCash30.toFixed(2)}</td>
+                        <td class="fw-bold text-primary">${TotalHour.toFixed(2)}</td>
+                        <td class="fw-bold text-primary">${TotalCash.toFixed(2)}</td>
+                        <td>บาท</td>
+                    </tr>
+            </tfoot>
+        </table>
+    `;
 
-            //location.reload();
-
-        } catch (error) {
-            console.error("Error deleting document:", error);
-            alert("ไม่สามารถลบข้อมูลได้: " + error.message);
-        }
-    }
-});
-
-});
+}
 
 function checkmonth(selectedMonth) {
 

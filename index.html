@@ -52,13 +52,32 @@
                 width: 100% !important;
                 font-size: 10px !important; /* ลดขนาดฟอนต์เพื่อให้ลงตัวในบรรทัดเดียว */
                 table-layout: auto !important;
-                display: table !important;
+                margin-top: -20px;
+            }
+
+
+
+            #header {
+                margin-bottom: -20;
+            }
+
+            #report {
+                width: 100% !important;
+                font-size: 10px !important; /* ลดขนาดฟอนต์เพื่อให้ลงตัวในบรรทัดเดียว */
+                margin-top: -20px;
+                
             }
 
 
             /* 2. ลด Padding ของ Cell ให้เหลือน้อยที่สุดเพื่อให้ Fit กับตัวหนังสือ */
             #data-table th, #data-table td {
                 padding: 4px 2px !important; 
+                white-space: nowrap; /* ป้องกันตัวหนังสือตัดบรรทัดใหม่ */
+                text-align: center;
+            }
+
+            #report th, #report td {
+                padding: 3px 1px !important; 
                 white-space: nowrap; /* ป้องกันตัวหนังสือตัดบรรทัดใหม่ */
                 text-align: center;
             }
@@ -88,11 +107,7 @@
 
             #tablereport {
                 font-size: 12px !important; /* ย่อขนาดตัวหนังสือลง */
-                margin-top: -10px !important; /* ลดระยะห่างขอบ */
-            }
-
-            #data-table {
-                margin-top: -10px;
+                margin-top: -20px auto !important; /* ลดระยะห่างขอบ */
             }
 
             #header-subtitle {

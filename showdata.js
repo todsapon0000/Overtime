@@ -18,6 +18,7 @@ const firebaseConfig = {
     const db = getFirestore(app);
     const usersCol = collection(db, "test");
 
+    let firebaseDataMap = new Map();
     let defaultDateStart = new Date(2025,11,21)
     let defaultDateEnd = new Date(2026,0,20)
     let rowData;
@@ -55,7 +56,7 @@ function formatDateString(date) {
 
 // 0.2 Time to Minutes
 function timeStringToMinutes(timeStr) {
-    debugger;
+    
     if (!timeStr || typeof timeStr !== 'string') return 0;
     const parts = timeStr.split(':');
     if (parts.length !== 2) return 0;
@@ -76,9 +77,6 @@ async function getMergedTimesheetData(firebaseMap) {
     let totalNetOT = 0;
     let totalFood = 0;
 
-    
-    debugger;
-
 
     let currentDate = new Date(defaultDateStart)
     let endDate = new Date(defaultDateEnd)
@@ -87,13 +85,18 @@ async function getMergedTimesheetData(firebaseMap) {
 
         
         const dateStr = formatDateString(currentDate); // Key: Sun 21 Dec, Wed 31 Dec, etc.
-        const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6; 
+        
+        const dateth = currentDate.toLocaleString('th-TH', { 
+            weekday: 'short', 
+            day: 'numeric', 
+            month: 'short'
+        });
  
         // 🎯 Lookup: ค้นหาข้อมูลจาก MapKey
         const docData = firebaseMap.get(dateStr); 
         
 
-        debugger;
+        
         
         if (docData) {
             
@@ -103,7 +106,7 @@ async function getMergedTimesheetData(firebaseMap) {
             
             let ot15_Duration, ot30_Duration;
 
-            debugger;
+            
 
 
 
@@ -269,8 +272,8 @@ function updateSummaryTable(ot15, ot30, net, food) {
     `;
 }
 
-let firebaseDataMap = new Map();
-debugger;
+
+
 
 onSnapshot(usersCol, (querySnapshot) => {
     
@@ -280,7 +283,7 @@ onSnapshot(usersCol, (querySnapshot) => {
         docData.id = doc.id; // <<< เพิ่มบรรทัดนี้
         firebaseDataMap.set(docData.date, docData); 
     });
-    debugger;
+    
     // 2. เรียก Render ด้วยช่วงเริ่มต้น
     loadAndRenderData();
 });
@@ -289,8 +292,10 @@ onSnapshot(usersCol, (querySnapshot) => {
 
 async function loadAndRenderData() {
 
-    debugger;
+    
     const finalData = await getMergedTimesheetData(firebaseDataMap);
+
+
     
     if (dataTable !== null) {
 
@@ -306,11 +311,11 @@ async function loadAndRenderData() {
                     { data: 'checkout', title: 'checkout' }, 
                     { data: 'ot', title: 'Out' },
                     { data: 'ot15', title: '1.5x', className: 'dt-body-right' },
-                    { data: 'sumot15', title: 'บาท', className: 'dt-body-right' },
+                    { data: 'sumot15', title: '฿1.5', className: 'dt-body-right' },
                     { data: 'ot3', title: '3.0x', className: 'dt-body-right' },
-                    { data: 'sumot3', title: 'บาท', className: 'dt-body-right' },
+                    { data: 'sumot3', title: '฿3.0', className: 'dt-body-right' },
                     { data: 'totalOT', title: 'Hr', className: 'dt-body-right' },
-                    { data: 'total', title: 'รวม', className: 'dt-body-right' },
+                    { data: 'total', title: 'Amt', className: 'dt-body-right' },
                     { 
                         data: null, 
                         title: 'Action', 
@@ -391,7 +396,7 @@ $(document).ready(function() {
             const checkout = $('#editcheckout').val(); 
             const ot = $('#editot').val();
             const dateRaw = $('#editdate').val(); // YYYY-MM-DD
-            debugger;
+            
 
             editDataToFirestore(finalDocId, brake, holiday, dateRaw, checkin, checkout, ot); // 👈 ส่ง Doc ID เข้าไป
 
@@ -409,7 +414,7 @@ $(document).ready(function() {
 
         // 1. ดึง Document ID จาก data-doc-id
         const docIdToEdit = $(this).data('doc-id');
-        debugger;
+        
         
         if (!docIdToEdit) {
              console.error('ไม่พบ Document ID!');
@@ -421,75 +426,34 @@ $(document).ready(function() {
         openEditModal(docIdToEdit); 
     });
 
-    // ใน showdata.js (Listener)
+// ใน showdata.js (Listener)
 
-    $(document).on('change', '#month-select', function() {
+$(document).on('change', '#month-select', function() {
 
-        debugger;
-        const selectedMonthAbbr = $(this).val();
-        
-        // ล้างตัวกรอง Custom Search ของ DataTable ออกทั้งหมด
-        $.fn.dataTable.ext.search = []; 
+    
+    const selectedMonthAbbr = $(this).val();
+    
+    // ล้างตัวกรอง Custom Search ของ DataTable ออกทั้งหมด
+    $.fn.dataTable.ext.search = []; 
 
-        if (selectedMonthAbbr) {
-            const check = checkmonth(selectedMonthAbbr);
-            if (check && check.start && check.end) {
-                // อัปเดตช่วงวันที่สำหรับ Query ข้อมูล
-                defaultDateStart = check.start;
-                defaultDateEnd = check.end;
+    if (selectedMonthAbbr) {
+        const check = checkmonth(selectedMonthAbbr);
+        if (check && check.start && check.end) {
+            // อัปเดตช่วงวันที่สำหรับ Query ข้อมูล
+            defaultDateStart = check.start;
+            defaultDateEnd = check.end;
 
-                $('#report').hide();
-                $('#data-table, #btnadd, #tablereport, #header-subtitle').show();
+            $('#report').hide();
+            $('#data-table, #btnadd, #tablereport, #header-subtitle').show();
 
-                // เรียกฟังก์ชันโหลดข้อมูลและวาดตารางใหม่
-                loadAndRenderData();
-            } else if (selectedMonthAbbr == 'Report'){
-                report(firebaseDataMap);
-            } else {
-                alert('ไม่พบช่วงรอบบัญชีสำหรับเดือนนี้');
-            }
+            // เรียกฟังก์ชันโหลดข้อมูลและวาดตารางใหม่
+            loadAndRenderData(); 
+        } else if (selectedMonthAbbr == 'Report'){
+            report(firebaseDataMap);
+        } else {
+            alert('ไม่พบช่วงรอบบัญชีสำหรับเดือนนี้');
         }
-    });
-
-    // ดักจับการคลิกปุ่ม Delete ในตาราง
-    $(document).on('click', '.del-btn', async function(e) {
-        
-
-        debugger;
-        // ดึง docId จากแอตทริบิวต์ data-id
-        const docId = $(this).data('doc-id');
-        const data = firebaseDataMap.get(docId)
-
-        // ตรวจสอบเบื้องต้นว่า docId ไม่ว่าง เพื่อป้องกัน Error indexOf
-        if (!docId) {
-            console.error("Error: Document ID is undefined.");
-            return;
-        }
-
-        if (confirm("ยืนยันการลบข้อมูลแถวนี้?")) {
-            try {
-                // ใช้ฟังก์ชันจาก Firebase SDK ที่ Initialize ไว้แล้วในไฟล์หลัก
-                // สมมติว่าคุณใช้ Firebase แบบ Modular ผ่าน window หรือประกาศไว้ส่วนกลาง
-
-                const docRef = doc(db, "test", data.id);
-                
-                await deleteDoc(docRef);
-                firebaseDataMap.delete(docId); // ลบออกจาก Map ในเครื่อง
-                loadAndRenderData(); // สั่งวาดตารางใหม่ทันทีโดยไม่ต้อง Refresh หน้า
-                
-
-
-                console.log("ลบข้อมูล ID:", docId, "สำเร็จ");
-
-                //location.reload();
-
-            } catch (error) {
-                console.error("Error deleting document:", error);
-                alert("ไม่สามารถลบข้อมูลได้: " + error.message);
-            }
-        }
-    });
-
+    }
 });
 
 async function report(firebaseDataMap) {
@@ -622,9 +586,48 @@ function renderReportTable(data) {
 
 }
 
-function checkmonth(selectedMonth) {
+// ดักจับการคลิกปุ่ม Delete ในตาราง
+$(document).on('click', '.del-btn', async function(e) {
+    
 
-    debugger;
+    
+    // ดึง docId จากแอตทริบิวต์ data-id
+    const docId = $(this).data('doc-id');
+    const data = firebaseDataMap.get(docId)
+
+    // ตรวจสอบเบื้องต้นว่า docId ไม่ว่าง เพื่อป้องกัน Error indexOf
+    if (!docId) {
+        console.error("Error: Document ID is undefined.");
+        return;
+    }
+
+    if (confirm("ยืนยันการลบข้อมูลแถวนี้?")) {
+        try {
+            // ใช้ฟังก์ชันจาก Firebase SDK ที่ Initialize ไว้แล้วในไฟล์หลัก
+            // สมมติว่าคุณใช้ Firebase แบบ Modular ผ่าน window หรือประกาศไว้ส่วนกลาง
+
+            const docRef = doc(db, "test", data.id);
+            
+            await deleteDoc(docRef);
+            firebaseDataMap.delete(docId); // ลบออกจาก Map ในเครื่อง
+            loadAndRenderData(); // สั่งวาดตารางใหม่ทันทีโดยไม่ต้อง Refresh หน้า
+            
+
+
+            console.log("ลบข้อมูล ID:", docId, "สำเร็จ");
+
+            //location.reload();
+
+        } catch (error) {
+            console.error("Error deleting document:", error);
+            alert("ไม่สามารถลบข้อมูลได้: " + error.message);
+        }
+    }
+});
+
+});
+
+function checkmonth(selectedMonth) {
 
     let date = new Date(2025,11,21)
 
@@ -767,7 +770,11 @@ function buildButton(rowData) {
             <button class="btn btn-xs btn-primary edit-btn" data-doc-id="${docId}" style="${btnStyle}">
                 <i class="fa fa-edit"></i>
             </button>
-
+            <!--
+            <button class="btn btn-xs btn-danger del-btn" data-doc-id="${docId}" style="${btnStyle}">
+                <i class="fa fa-trash"></i>
+            </button>
+            -->
         </div>
     `;
 }
@@ -781,7 +788,7 @@ async function openEditModal(docId, rowData) {
     //console.log(data.date.exists())
 
     try {
-        debugger;
+        
         if (data) {
 
             // 1. เก็บ ID สำหรับใช้ในการบันทึก
@@ -800,7 +807,7 @@ async function openEditModal(docId, rowData) {
             Modaledit.show();
             
         } else {
-            debugger;
+            
 
             //$('#adddate').prop('readonly', true);
             $('#adddate').val(docId).prop('readonly', true).prop('disabled', true);

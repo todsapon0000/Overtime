@@ -1,5 +1,4 @@
 export function calculateSinotransOT(dateStr, startTime, endTime, isHoliday = false, brake = true) {
-    debugger;
     // 1. แกะชื่อวัน (เช่น "Sun 21 Dec" -> "Sun") เพื่อเช็คประเภทวัน
     const dayName = dateStr.split(' ')[0]; 
     const isSunday = (dayName === 'Sun');

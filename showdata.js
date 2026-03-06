@@ -526,7 +526,6 @@ async function report(firebaseDataMap) {
 }
 
 function renderReportTable(data) {
-    debugger
 
     const hourlyRate = (12000 / 30) / 8;
 

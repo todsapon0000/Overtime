@@ -236,7 +236,7 @@ btnadd.innerHTML = '<button class="btn btn-success" id="btnadd">ADD</button> <a 
 
 
 let tablereport = document.createElement('div');
-
+let tablereportall = document.createElement('div');
 
 
 function updateSummaryTable(ot15, ot30, net, food) {

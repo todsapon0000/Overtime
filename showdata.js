@@ -550,7 +550,7 @@ function renderReportTable(data) {
                     <th>บาท</th>
                     <th>Hr</th>
                     <th>รวม</th>
-                    <th>เงินออก</th>
+                    <th>เงินออกก</th>
                 </tr>
             </thead>
             <tbody>
